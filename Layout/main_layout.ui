@@ -1,0 +1,237 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>640</width>
+    <height>470</height>
+   </rect>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>640</width>
+    <height>470</height>
+   </size>
+  </property>
+  <property name="maximumSize">
+   <size>
+    <width>640</width>
+    <height>470</height>
+   </size>
+  </property>
+  <property name="font">
+   <font>
+    <kerning>true</kerning>
+   </font>
+  </property>
+  <property name="windowTitle">
+   <string>MQTT Tester - Dev91</string>
+  </property>
+  <property name="dockOptions">
+   <set>QMainWindow::AllowTabbedDocks|QMainWindow::AnimatedDocks</set>
+  </property>
+  <property name="unifiedTitleAndToolBarOnMac">
+   <bool>false</bool>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <widget class="QPushButton" name="subscribe_btn">
+    <property name="geometry">
+     <rect>
+      <x>520</x>
+      <y>65</y>
+      <width>110</width>
+      <height>30</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Subscribe</string>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="subscribe_topic_line">
+    <property name="geometry">
+     <rect>
+      <x>325</x>
+      <y>70</y>
+      <width>190</width>
+      <height>20</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="publish_btn">
+    <property name="geometry">
+     <rect>
+      <x>210</x>
+      <y>65</y>
+      <width>110</width>
+      <height>30</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Publish</string>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="publish_topic_line">
+    <property name="geometry">
+     <rect>
+      <x>15</x>
+      <y>70</y>
+      <width>190</width>
+      <height>20</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="connect_btn">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>10</y>
+      <width>110</width>
+      <height>30</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Connect</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="disconnect_btn">
+    <property name="geometry">
+     <rect>
+      <x>120</x>
+      <y>10</y>
+      <width>110</width>
+      <height>30</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Disconnect</string>
+    </property>
+   </widget>
+   <widget class="QToolButton" name="tool_btn">
+    <property name="geometry">
+     <rect>
+      <x>235</x>
+      <y>15</y>
+      <width>25</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>...</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="publish_label">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>50</y>
+      <width>100</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Publish</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="subscribe_label">
+    <property name="geometry">
+     <rect>
+      <x>330</x>
+      <y>50</y>
+      <width>100</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Subscribe</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="connection_flag_label">
+    <property name="geometry">
+     <rect>
+      <x>280</x>
+      <y>20</y>
+      <width>100</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Disconnected</string>
+    </property>
+   </widget>
+   <widget class="QTextEdit" name="sub_msg_textedit">
+    <property name="geometry">
+     <rect>
+      <x>255</x>
+      <y>270</y>
+      <width>370</width>
+      <height>190</height>
+     </rect>
+    </property>
+    <property name="readOnly">
+     <bool>true</bool>
+    </property>
+   </widget>
+   <widget class="QTextEdit" name="publish_textedit">
+    <property name="geometry">
+     <rect>
+      <x>15</x>
+      <y>95</y>
+      <width>300</width>
+      <height>150</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QListWidget" name="subscribe_list">
+    <property name="geometry">
+     <rect>
+      <x>325</x>
+      <y>95</y>
+      <width>300</width>
+      <height>150</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QLabel" name="publish_label_2">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>250</y>
+      <width>100</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Topic</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="publish_label_3">
+    <property name="geometry">
+     <rect>
+      <x>260</x>
+      <y>250</y>
+      <width>100</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Payload</string>
+    </property>
+   </widget>
+   <widget class="QListWidget" name="sub_topic_list">
+    <property name="geometry">
+     <rect>
+      <x>15</x>
+      <y>270</y>
+      <width>230</width>
+      <height>190</height>
+     </rect>
+    </property>
+   </widget>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
