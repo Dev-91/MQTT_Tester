@@ -15,6 +15,6 @@
 
 
 ### 기능
-   - 나중에... 별거 없음...
-   
+   - 나중에... 별거 없음... 아래 영상 한번 보면 이해될 듯
+
    <img width="70%" src="https://user-images.githubusercontent.com/38420069/140478811-d32bb0a5-a6f1-4ea0-a06d-c3d5a2ba21f1.gif"/>
