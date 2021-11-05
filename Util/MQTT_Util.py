@@ -76,6 +76,9 @@ class MQTT_Process(threading.Thread):
             # print(' Connect Success!  Communication Ready! ')
             # print('=' * 40)
             print('MQTT_Protocol : MQTT CONNECTION OK\n')
+            print(str(client))
+            print(str(userdata))
+            print(str(flags))
             self.layout_instance.mqtt_connection_flag(True)
         else:
             self.layout_instance.mqtt_connection_flag(False)
@@ -86,6 +89,9 @@ class MQTT_Process(threading.Thread):
     def on_disconnect(self, client, userdata, flags, rc=0):
         if rc == 0:
             print('MQTT_Protocol : MQTT DISCONNECTION\n')
+            print(str(client))
+            print(str(userdata))
+            print(str(flags))
             self.layout_instance.mqtt_connection_flag(False)
         else:
             self.layout_instance.mqtt_connection_flag(False)
@@ -96,7 +102,7 @@ class MQTT_Process(threading.Thread):
         print('subscribed: ' + str(client) + ' ' + str(granted_qos) + 'Registration OK!')
 
     def on_message(self, client, userdata, msg):
-        topic = str(msg.topic)
-        msg = str(msg.payload).replace('b', '').replace('\'', '')
-        self.layout_instance.mqtt_sub_msg(topic, msg)
+        self.layout_instance.mqtt_sub_msg(msg)
+        # topic = str(msg.topic)
+        # msg = str(msg.payload).replace('b', '').replace('\'', '')
 

@@ -1,6 +1,7 @@
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 from PyQt5 import uic
+import json
 
 import Layout.Layout_Thread as Layout_Thread
 import Util.MQTT_Util as MQTT_Util
@@ -8,7 +9,6 @@ import Layout.Tool_Window as tool_w
 
 
 form_class = uic.loadUiType("Layout/main_layout.ui")[0]
-dialog_class = uic.loadUiType("Layout/tool_dialog.ui")[0]
 
 
 def close_func():
@@ -44,7 +44,7 @@ class MainWindow(QMainWindow, form_class):
 
         self.connection_flag = False
 
-        self.sub_topic_msg_diclist = list()
+        self.sub_topic_msg_list = list()
 
         self.connection_flag_label.setText("Disconnected")
         self.tool_btn.setEnabled(True)
@@ -52,6 +52,8 @@ class MainWindow(QMainWindow, form_class):
         self.disconnect_btn.setEnabled(False)
         self.publish_btn.setEnabled(False)
         self.subscribe_btn.setEnabled(False)
+
+        self.radio_btn_check = self.text_type_radio_btn.isChecked()
 
         # UI Thread
         self.connect_th = Layout_Thread.LayoutThread(self, False)
@@ -62,6 +64,7 @@ class MainWindow(QMainWindow, form_class):
         self.mqtt_sub_th = Layout_Thread.LayoutThread(self, False)
         self.subscribe_list_th = Layout_Thread.LayoutThread(self, False)
         self.sub_topic_list_th = Layout_Thread.LayoutThread(self, False)
+        self.sub_type_th = Layout_Thread.LayoutThread(self, False)
 
         # 쓰레드 이벤트 연결
         self.connect_th.threadEvent.connect(self.connect_th_handler)
@@ -72,9 +75,12 @@ class MainWindow(QMainWindow, form_class):
         self.mqtt_sub_th.threadEvent.connect(self.mqtt_sub_th_handler)
         self.subscribe_list_th.threadEvent.connect(self.subscribe_list_th_handler)
         self.sub_topic_list_th.threadEvent.connect(self.sub_topic_list_th_handler)
+        self.sub_type_th.threadEvent.connect(self.sub_type_th_handler)
 
         self.subscribe_list.itemDoubleClicked.connect(self.subscribe_list_func)
         self.sub_topic_list.itemClicked.connect(self.sub_topic_list_func)
+        self.text_type_radio_btn.clicked.connect(self.sub_type_func)
+        self.hex_type_radio_btn.clicked.connect(self.sub_type_func)
 
     def tool_btn_func(self):
         tool_dialog = tool_w.DialogWindow()
@@ -104,18 +110,60 @@ class MainWindow(QMainWindow, form_class):
         self.subscribe_list_th.start()
 
     def sub_topic_list_func(self):
-        self.sub_topic_num = self.sub_topic_list.currentRow()
         self.sub_topic_list_th.start()
 
-    def mqtt_sub_msg(self, topic, msg):
-        print("topic : " + topic + "    msg : " + msg)
-        topic_msg_dic = { "topic" : topic, "msg" : msg }
-        self.sub_topic_msg_diclist.append(topic_msg_dic)
+    def sub_type_func(self):
+        self.sub_type_th.start()
+
+    def mqtt_sub_msg(self, msg):
+        print("topic : " + str(msg.topic) + "    payload : " + str(msg.payload))
+        self.sub_topic_msg_list.append(msg)
         self.mqtt_sub_th.start()
 
     def list_ui_func(self):
         tool_dialog = tool_w.DialogWindow()
         tool_dialog.exec()
+
+    def is_json(self, obj):
+        try:
+            json_object = json.loads(obj)
+            # { } 가 포함된 string이 invalid json 인 경우 Exception
+            iterator = iter(json_object)
+            # { } 가 없는 경우는 string의 경우 Exception
+        except Exception as e:
+            return False
+        return True
+    
+    def is_hex_string(self, obj):
+        try:
+            # EX) [FF FE 04 67 33] 
+            if obj[0] == "[" and obj[-1] == "]":
+                return True
+            else:
+                return False
+        except Exception as e:
+            return False
+        return True
+
+    def payload_func(self, num):
+        self.radio_btn_check = self.text_type_radio_btn.isChecked()
+        if len(self.sub_topic_msg_list) > 0:
+            self.sub_msg_textedit.clear()
+            if self.radio_btn_check == True:
+                try:
+                    json_payload = json.dumps(json.loads(self.sub_topic_msg_list[num].payload), indent=2)
+                    self.sub_msg_textedit.append(str(json_payload))
+                except:
+                    self.sub_msg_textedit.append(str(self.sub_topic_msg_list[num].payload).replace('b', '').replace('\'', ''))
+                    
+                self.length_num_label.setText(str(len(self.sub_topic_msg_list[num].payload)))
+            else:
+                byte_obj = bytes(self.sub_topic_msg_list[num].payload)
+                text_byte_obj = ""
+                for bo in byte_obj:
+                    text_byte_obj += format(bo, '02X') + " "
+                self.sub_msg_textedit.append(text_byte_obj)
+                self.length_num_label.setText(str(len(byte_obj)))
 
     def closeEvent(self, event):
         msg = QMessageBox()
@@ -142,8 +190,25 @@ class MainWindow(QMainWindow, form_class):
     @pyqtSlot()
     def publish_th_handler(self):
         if self.connection_flag:
-            self.mqtt_process.publish_func(self.publish_topic_line.text(),
-                                           self.publish_textedit.toPlainText())
+            pub_topic = self.publish_topic_line.text()
+            textbox_msg = self.publish_textedit.toPlainText()
+            
+            
+            if self.is_json(textbox_msg):  # Json
+                json_object = json.loads(textbox_msg)
+                pub_payload = textbox_msg
+            else:
+                if self.is_hex_string(textbox_msg):  # Hex
+                    hex_str_list = textbox_msg.split(" ")
+                    # print(hex_str_list)
+                    hex_bytearray = bytearray()
+                    for hex_s in hex_str_list[1:-1]:
+                        hex_bytearray.append(int(hex_s, 16))
+                    pub_payload = hex_bytearray
+                else:  # String
+                    pub_payload = textbox_msg
+                
+            self.mqtt_process.publish_func(pub_topic, pub_payload)
 
     @pyqtSlot()
     def subscribe_th_handler(self):
@@ -168,8 +233,9 @@ class MainWindow(QMainWindow, form_class):
             self.subscribe_list.clear()
             self.sub_topic_list.clear()
             self.sub_msg_textedit.clear()
-            
-            self.sub_topic_msg_diclist.clear()
+
+            self.sub_topic_msg_list.clear()
+            self.length_num_label.setText("0")
 
             self.connect_btn.setEnabled(True)
             self.disconnect_btn.setEnabled(False)
@@ -180,13 +246,19 @@ class MainWindow(QMainWindow, form_class):
 
     @pyqtSlot()
     def mqtt_sub_th_handler(self):
-        self.sub_topic_list.addItem(self.sub_topic_msg_diclist[-1]["topic"])
-        self.sub_msg_textedit.clear()
-        self.sub_msg_textedit.append(self.sub_topic_msg_diclist[-1]["msg"])
-
+        self.sub_topic_list.addItem(self.sub_topic_msg_list[-1].topic)
+        self.payload_func(-1)
+    
+    @pyqtSlot()
+    def sub_type_th_handler(self):
+        sub_topic_num = self.sub_topic_list.currentRow()
+        self.payload_func(sub_topic_num)
+    
+    @pyqtSlot()
     def subscribe_list_th_handler(self):
         self.publish_topic_line.setText(self.subscribe_list_th_text)
 
+    @pyqtSlot()
     def sub_topic_list_th_handler(self):
-        self.sub_msg_textedit.clear()
-        self.sub_msg_textedit.append(self.sub_topic_msg_diclist[self.sub_topic_num]["msg"])
+        sub_topic_num = self.sub_topic_list.currentRow()
+        self.payload_func(sub_topic_num)
