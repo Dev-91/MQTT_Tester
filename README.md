@@ -13,8 +13,8 @@
    - Qos 부분은 아직 없음
    - 현재 기능이 여기까지 업데이트는 본인이 필요하다 싶으면 할 생각
 
-
 ### 기능
    - 나중에... 별거 없음... 아래 영상 한번 보면 이해될 듯
+   - Config/config copy.ini 파일 -> Config/config.ini 파일명 변경해야함
 
    <img width="70%" src="https://user-images.githubusercontent.com/38420069/140478811-d32bb0a5-a6f1-4ea0-a06d-c3d5a2ba21f1.gif"/>
