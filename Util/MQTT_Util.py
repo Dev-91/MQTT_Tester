@@ -103,6 +103,4 @@ class MQTT_Process(threading.Thread):
 
     def on_message(self, client, userdata, msg):
         self.layout_instance.mqtt_sub_msg(msg)
-        # topic = str(msg.topic)
-        # msg = str(msg.payload).replace('b', '').replace('\'', '')
 
