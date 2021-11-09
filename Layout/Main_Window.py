@@ -31,12 +31,6 @@ class MainWindow(QMainWindow, form_class):
         super().__init__()
         self.setupUi(self)
 
-        self.tool_btn.clicked.connect(self.tool_btn_func)
-        self.connect_btn.clicked.connect(self.connect_btn_func)
-        self.disconnect_btn.clicked.connect(self.disconnect_btn_func)
-        self.publish_btn.clicked.connect(self.publish_btn_func)
-        self.subscribe_btn.clicked.connect(self.subscribe_btn_func)
-
         # self.circle_img = QPixmap("Layout/circle.png").scaled(self.width(), self.height(), Qt.IgnoreAspectRatio, Qt.FastTransformation)
         
         # self.circle_img_label.setPixmap(self.circle_img)
@@ -52,6 +46,7 @@ class MainWindow(QMainWindow, form_class):
         self.disconnect_btn.setEnabled(False)
         self.publish_btn.setEnabled(False)
         self.subscribe_btn.setEnabled(False)
+        self.unsubscribe_btn.setEnabled(False)
 
         self.radio_btn_check = self.text_type_radio_btn.isChecked()
 
@@ -65,6 +60,8 @@ class MainWindow(QMainWindow, form_class):
         self.subscribe_list_th = Layout_Thread.LayoutThread(self, False)
         self.sub_topic_list_th = Layout_Thread.LayoutThread(self, False)
         self.sub_type_th = Layout_Thread.LayoutThread(self, False)
+        self.clear_th = Layout_Thread.LayoutThread(self, False)
+        self.unsubscribe_th = Layout_Thread.LayoutThread(self, False)
 
         # 쓰레드 이벤트 연결
         self.connect_th.threadEvent.connect(self.connect_th_handler)
@@ -76,11 +73,23 @@ class MainWindow(QMainWindow, form_class):
         self.subscribe_list_th.threadEvent.connect(self.subscribe_list_th_handler)
         self.sub_topic_list_th.threadEvent.connect(self.sub_topic_list_th_handler)
         self.sub_type_th.threadEvent.connect(self.sub_type_th_handler)
+        self.clear_th.threadEvent.connect(self.clear_th_handler)
+        self.unsubscribe_th.threadEvent.connect(self.unsubscribe_th_handler)
+
+        self.tool_btn.clicked.connect(self.tool_btn_func)
+        self.connect_btn.clicked.connect(self.connect_btn_func)
+        self.disconnect_btn.clicked.connect(self.disconnect_btn_func)
+        self.publish_btn.clicked.connect(self.publish_btn_func)
+        self.subscribe_btn.clicked.connect(self.subscribe_btn_func)
+        self.unsubscribe_btn.clicked.connect(self.unsubscribe_btn_func)
+        self.clear_btn.clicked.connect(self.clear_btn_func)
 
         self.subscribe_list.itemDoubleClicked.connect(self.subscribe_list_func)
         self.sub_topic_list.itemClicked.connect(self.sub_topic_list_func)
         self.text_type_radio_btn.clicked.connect(self.sub_type_func)
         self.hex_type_radio_btn.clicked.connect(self.sub_type_func)
+
+        self.subscribe_topic_line.returnPressed.connect(self.subscribe_btn_func)
 
     def tool_btn_func(self):
         tool_dialog = tool_w.DialogWindow()
@@ -97,6 +106,12 @@ class MainWindow(QMainWindow, form_class):
 
     def subscribe_btn_func(self):
         self.subscribe_th.start()
+
+    def unsubscribe_btn_func(self):
+        self.unsubscribe_th.start()
+
+    def clear_btn_func(self):
+        self.clear_th.start()
 
     def mqtt_connection_flag(self, flag):
         self.connection_flag = flag
@@ -130,7 +145,7 @@ class MainWindow(QMainWindow, form_class):
             # { } 가 포함된 string이 invalid json 인 경우 Exception
             iterator = iter(json_object)
             # { } 가 없는 경우는 string의 경우 Exception
-        except Exception as e:
+        except:
             return False
         return True
     
@@ -141,9 +156,8 @@ class MainWindow(QMainWindow, form_class):
                 return True
             else:
                 return False
-        except Exception as e:
+        except:
             return False
-        return True
 
     def payload_func(self, num):
         self.radio_btn_check = self.text_type_radio_btn.isChecked()
@@ -164,6 +178,10 @@ class MainWindow(QMainWindow, form_class):
                     text_byte_obj += format(bo, '02X') + " "
                 self.sub_msg_textedit.append(text_byte_obj)
                 self.length_num_label.setText(str(len(byte_obj)))
+        else:
+            self.sub_msg_textedit.clear()
+            self.length_num_label.setText("0")
+
 
     def closeEvent(self, event):
         msg = QMessageBox()
@@ -195,16 +213,22 @@ class MainWindow(QMainWindow, form_class):
             
             
             if self.is_json(textbox_msg):  # Json
-                json_object = json.loads(textbox_msg)
-                pub_payload = textbox_msg
+                try:
+                    json_object = json.loads(textbox_msg)
+                    pub_payload = textbox_msg
+                except:
+                    pub_payload = textbox_msg
             else:
                 if self.is_hex_string(textbox_msg):  # Hex
-                    hex_str_list = textbox_msg.split(" ")
-                    # print(hex_str_list)
-                    hex_bytearray = bytearray()
-                    for hex_s in hex_str_list[1:-1]:
-                        hex_bytearray.append(int(hex_s, 16))
-                    pub_payload = hex_bytearray
+                    try:
+                        hex_str_list = textbox_msg.split(" ")
+                        # print(hex_str_list)
+                        hex_bytearray = bytearray()
+                        for hex_s in hex_str_list[1:-1]:
+                            hex_bytearray.append(int(hex_s, 16))
+                        pub_payload = hex_bytearray
+                    except:
+                        pub_payload = textbox_msg
                 else:  # String
                     pub_payload = textbox_msg
                 
@@ -213,9 +237,18 @@ class MainWindow(QMainWindow, form_class):
     @pyqtSlot()
     def subscribe_th_handler(self):
         if self.connection_flag:
+            list_items = []
+            for idx in range(self.subscribe_list.count()):
+                list_items.append(self.subscribe_list.item(idx).text())
+
             sub_topic = self.subscribe_topic_line.text()
-            self.mqtt_process.subscribe_func(sub_topic)
-            self.subscribe_list.addItem(sub_topic)
+            if not sub_topic in list_items:
+                self.mqtt_process.subscribe_func(sub_topic)
+                self.subscribe_list.addItem(sub_topic)
+            else:
+                print("Over sub")
+                
+            
 
     @pyqtSlot()
     def mqtt_icon_th_handler(self):
@@ -225,6 +258,7 @@ class MainWindow(QMainWindow, form_class):
             self.tool_btn.setEnabled(False)
             self.publish_btn.setEnabled(True)
             self.subscribe_btn.setEnabled(True)
+            self.unsubscribe_btn.setEnabled(True)
             self.connection_flag_label.setText("Connected")
         else:
             self.publish_topic_line.clear()
@@ -242,6 +276,7 @@ class MainWindow(QMainWindow, form_class):
             self.tool_btn.setEnabled(True)
             self.publish_btn.setEnabled(False)
             self.subscribe_btn.setEnabled(False)
+            self.unsubscribe_btn.setEnabled(False)
             self.connection_flag_label.setText("Disconnected")
 
     @pyqtSlot()
@@ -262,3 +297,18 @@ class MainWindow(QMainWindow, form_class):
     def sub_topic_list_th_handler(self):
         sub_topic_num = self.sub_topic_list.currentRow()
         self.payload_func(sub_topic_num)
+
+    @pyqtSlot()
+    def clear_th_handler(self):
+        self.sub_topic_msg_list.clear()
+        self.sub_topic_list.clear()
+        self.payload_func(0)
+        
+    @pyqtSlot()
+    def unsubscribe_th_handler(self):
+        unsub_num = self.subscribe_list.currentRow()
+        unsub_text = self.subscribe_list.item(unsub_num).text()
+
+        self.mqtt_process.unsubscribe_func(unsub_text)
+        self.subscribe_list.takeItem(unsub_num)
+        

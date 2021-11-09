@@ -66,6 +66,10 @@ class MQTT_Process(threading.Thread):
     def subscribe_func(self, sub_topic):
         self.client.subscribe(sub_topic)
         print('Subscribe : ' + sub_topic)
+    
+    def unsubscribe_func(self, unsub_topic):
+        self.client.unsubscribe(unsub_topic)
+        print('Unsubscribe : ' + unsub_topic)
 
     def on_connect(self, client, userdata, flags, rc):
         if rc == 0:
@@ -76,9 +80,9 @@ class MQTT_Process(threading.Thread):
             # print(' Connect Success!  Communication Ready! ')
             # print('=' * 40)
             print('MQTT_Protocol : MQTT CONNECTION OK\n')
-            print(str(client))
-            print(str(userdata))
-            print(str(flags))
+            print('client : ' + str(client))
+            print('userdata : ' + str(userdata))
+            print('flags : ' + str(flags))
             self.layout_instance.mqtt_connection_flag(True)
         else:
             self.layout_instance.mqtt_connection_flag(False)
@@ -89,10 +93,13 @@ class MQTT_Process(threading.Thread):
     def on_disconnect(self, client, userdata, flags, rc=0):
         if rc == 0:
             print('MQTT_Protocol : MQTT DISCONNECTION\n')
-            print(str(client))
-            print(str(userdata))
-            print(str(flags))
-            self.layout_instance.mqtt_connection_flag(False)
+            print('client : ' + str(client))
+            print('userdata : ' + str(userdata))
+            print('flags : ' + str(flags))
+            if flags == 0:
+                self.layout_instance.mqtt_connection_flag(False)
+            elif flags == 1:
+                print('MQTT_Protuocol : MQTT RECONNECT...\n')
         else:
             self.layout_instance.mqtt_connection_flag(False)
             self.layout_instance.mqtt_connection_rc(rc)
