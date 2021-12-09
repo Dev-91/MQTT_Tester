@@ -20,7 +20,7 @@ class MQTT_Process(threading.Thread):
         # self.username = self.config.get('MQTT', 'username')
         # self.password = self.config.get('MQTT', 'password')
         # self.client_id = self.config.get('MQTT', 'client_id')
-
+        self.sub_topic_list = list()
         # self.client_id = self.config.get('MQTT', 'SYS') + str('_') + str(random.randint(1, 9999))
         self.client = mqtt.Client()
 
@@ -64,10 +64,15 @@ class MQTT_Process(threading.Thread):
         self.client.publish(pub_topic, pub_payload)
 
     def subscribe_func(self, sub_topic):
+        self.sub_topic_list.append(sub_topic)
         self.client.subscribe(sub_topic)
         print('Subscribe : ' + sub_topic)
     
     def unsubscribe_func(self, unsub_topic):
+        try:
+            self.sub_topic_list.remove(unsub_topic)
+        except:
+            print(unsub_topic + " not in subscribe list")
         self.client.unsubscribe(unsub_topic)
         print('Unsubscribe : ' + unsub_topic)
 
@@ -99,6 +104,8 @@ class MQTT_Process(threading.Thread):
             if flags == 0:
                 self.layout_instance.mqtt_connection_flag(False)
             elif flags == 1:
+                for sub in self.sub_topic_list:
+                    self.client.subscribe(sub)
                 print('MQTT_Protuocol : MQTT RECONNECT...\n')
         else:
             self.layout_instance.mqtt_connection_flag(False)
